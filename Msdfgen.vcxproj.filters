@@ -80,9 +80,6 @@
     <ClInclude Include="resource.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp">
-      <Filter>Standalone</Filter>
-    </ClCompile>
     <ClCompile Include="core\Bitmap.cpp">
       <Filter>Core</Filter>
     </ClCompile>
@@ -136,6 +133,12 @@
     </ClCompile>
     <ClCompile Include="core\msdfgen.cpp">
       <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="oldmain.cpp">
+      <Filter>Standalone</Filter>
+    </ClCompile>
+    <ClCompile Include="main.cpp">
+      <Filter>Standalone</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
