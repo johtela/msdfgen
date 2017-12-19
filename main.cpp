@@ -43,7 +43,7 @@ int main(int argc, const char* const *argv) {
 					else
 						break;
 				}
-				for (int i = 0; i < bitmaps.size(); i++)
+				for (size_t i = 0; i < bitmaps.size(); i++)
 					delete bitmaps[i];
 				fclose(cmapFile);
 			}

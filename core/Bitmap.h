@@ -30,6 +30,8 @@ public:
     int height() const;
     T & operator()(int x, int y);
     const T & operator()(int x, int y) const;
+	bool canFit(Bitmap<T> &other, int x, int y);
+	bool bitBlit(Bitmap<T> &other, int x, int y);
 
 private:
     T *content;
