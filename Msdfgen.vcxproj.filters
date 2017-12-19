@@ -78,6 +78,9 @@
       <Filter>Extensions</Filter>
     </ClInclude>
     <ClInclude Include="resource.h" />
+    <ClInclude Include="GlyphBitmap.h">
+      <Filter>Standalone</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="core\Bitmap.cpp">
@@ -138,6 +141,9 @@
       <Filter>Standalone</Filter>
     </ClCompile>
     <ClCompile Include="main.cpp">
+      <Filter>Standalone</Filter>
+    </ClCompile>
+    <ClCompile Include="GlyphBitmap.cpp">
       <Filter>Standalone</Filter>
     </ClCompile>
   </ItemGroup>

@@ -28,12 +28,11 @@ public:
     int width() const;
     /// Bitmap height in pixels.
     int height() const;
+	T* pixels() const;
     T & operator()(int x, int y);
     const T & operator()(int x, int y) const;
-	bool canFit(Bitmap<T> &other, int x, int y);
-	bool bitBlit(Bitmap<T> &other, int x, int y);
 
-private:
+protected:
     T *content;
     int w, h;
 

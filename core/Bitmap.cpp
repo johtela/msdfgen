@@ -62,6 +62,11 @@ int Bitmap<T>::height() const {
 }
 
 template <typename T>
+T* Bitmap<T>::pixels() const {
+	return content;
+}
+
+template <typename T>
 T & Bitmap<T>::operator()(int x, int y) {
     return content[y*w+x];
 }
@@ -69,24 +74,6 @@ T & Bitmap<T>::operator()(int x, int y) {
 template <typename T>
 const T & Bitmap<T>::operator()(int x, int y) const {
     return content[y*w+x];
-}
-
-template<typename T>
-bool Bitmap<T>::canFit(Bitmap<T>& other, int x, int y)
-{
-	return x + other.w <= w && y + other.h <= h;
-}
-
-template <typename T>
-bool Bitmap<T>::bitBlit(Bitmap<T> &other, int x, int y) {
-	if (!canFit(other, x, y))
-		return false;
-	for (int line = 0, src = 0; line < other.h; line++) {
-		int dest = (y + line) * w + x;
-		for (int pixel = 0; pixel < other.w; pixel++)
-			content[dest++] = other.content[src++];
-	}
-	return true;
 }
 
 template class Bitmap<float>;

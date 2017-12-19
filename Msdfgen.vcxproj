@@ -146,6 +146,7 @@
     <ClInclude Include="ext\import-font.h" />
     <ClInclude Include="ext\import-svg.h" />
     <ClInclude Include="ext\save-png.h" />
+    <ClInclude Include="GlyphBitmap.h" />
     <ClInclude Include="msdfgen-ext.h" />
     <ClInclude Include="msdfgen.h" />
     <ClInclude Include="resource.h" />
@@ -166,6 +167,7 @@
     <ClCompile Include="ext\import-font.cpp" />
     <ClCompile Include="ext\import-svg.cpp" />
     <ClCompile Include="ext\save-png.cpp" />
+    <ClCompile Include="GlyphBitmap.cpp" />
     <ClCompile Include="lib\lodepng.cpp" />
     <ClCompile Include="lib\tinyxml2.cpp" />
     <ClCompile Include="oldmain.cpp" />
