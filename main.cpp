@@ -3,6 +3,7 @@
 #include "GlyphBitmap.h"
 #include <algorithm>
 #include <string>
+#include <ft2build.h>
 
 #ifdef _WIN32
 #pragma warning(disable:4996)
@@ -13,11 +14,17 @@ using namespace msdfgen;
 GlyphBitmap* createCharBitmap(FontHandle *font, char character)
 {
 	Shape shape;
-	if (loadGlyph(shape, font, character)) {
+	GlyphMetrics metrics;
+	metrics.range = 4.;
+	if (loadGlyph(shape, font, character, &metrics)) {
 		shape.normalize();
 		edgeColoringSimple(shape, 3.0); // max. angle
-		GlyphBitmap *msdf = new GlyphBitmap(32, 32); // image width, height 
-		generateMSDF(*msdf, shape, 4.0, 1.0, Vector2(4.0, 4.0)); // range, scale, translation
+		double l, b, r, t;
+		shape.bounds(l, b, r, t);
+		double width = r - l;
+		double height = t - b;
+		GlyphBitmap *msdf = new GlyphBitmap(metrics.width, metrics.height); // image width, height 
+		generateMSDF(*msdf, shape, metrics.range, 1.0, Vector2(metrics.range, metrics.range));
 		return msdf;
 	}
 	return NULL;

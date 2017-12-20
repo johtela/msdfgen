@@ -633,7 +633,9 @@ int oldmain(int argc, const char * const *argv) {
                 deinitializeFreetype(ft);
                 ABORT("Failed to load font file.");
             }
-            if (!loadGlyph(shape, font, unicode, &glyphAdvance)) {
+			GlyphMetrics metrics;
+            if (!loadGlyph(shape, font, unicode, &metrics)) {
+				glyphAdvance = metrics.advance;
                 destroyFont(font);
                 deinitializeFreetype(ft);
                 ABORT("Failed to load glyph from font file.");

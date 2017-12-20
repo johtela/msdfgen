@@ -14,6 +14,7 @@ public:
 	bool bitBlit(Bitmap<FloatRGB> &other);
 	int x;
 	int y;
+
 };
 
 }

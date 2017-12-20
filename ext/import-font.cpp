@@ -29,7 +29,7 @@ class FontHandle {
     friend void destroyFont(FontHandle *font);
     friend bool getFontScale(double &output, FontHandle *font);
     friend bool getFontWhitespaceWidth(double &spaceAdvance, double &tabAdvance, FontHandle *font);
-    friend bool loadGlyph(Shape &output, FontHandle *font, int unicode, double *advance);
+    friend bool loadGlyph(Shape &output, FontHandle *font, int unicode, GlyphMetrics *metrics);
     friend bool getKerning(double &output, FontHandle *font, int unicode1, int unicode2);
 
     FT_Face face;
@@ -123,7 +123,7 @@ bool getFontWhitespaceWidth(double &spaceAdvance, double &tabAdvance, FontHandle
     return true;
 }
 
-bool loadGlyph(Shape &output, FontHandle *font, int unicode, double *advance) {
+bool loadGlyph(Shape &output, FontHandle *font, int unicode, GlyphMetrics *metrics) {
     if (!font)
         return false;
     FT_Error error = FT_Load_Char(font->face, unicode, FT_LOAD_NO_SCALE);
@@ -131,8 +131,13 @@ bool loadGlyph(Shape &output, FontHandle *font, int unicode, double *advance) {
         return false;
     output.contours.clear();
     output.inverseYAxis = false;
-    if (advance)
-        *advance = font->face->glyph->advance.x/64.;
+	if (metrics) {
+		metrics->width = font->face->glyph->metrics.width / 64. + (2. * metrics->range);
+		metrics->height = font->face->glyph->metrics.height / 64. + (2. * metrics->range);
+		metrics->offsetX = font->face->glyph->metrics.horiBearingX / 64.;
+		metrics->offsetY = font->face->glyph->metrics.horiBearingY / 64.;
+		metrics->advance = font->face->glyph->metrics.horiAdvance / 64.;
+	}
 
     FtContext context = { };
     context.shape = &output;

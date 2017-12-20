@@ -9,6 +9,16 @@ namespace msdfgen {
 class FreetypeHandle;
 class FontHandle;
 
+class GlyphMetrics {
+public:
+	double range;
+	double width;
+	double height;
+	double offsetX;
+	double offsetY;
+	double advance;
+};
+
 /// Initializes the FreeType library
 FreetypeHandle * initializeFreetype();
 /// Deinitializes the FreeType library
@@ -22,7 +32,7 @@ bool getFontScale(double &output, FontHandle *font);
 /// Returns the width of space and tab
 bool getFontWhitespaceWidth(double &spaceAdvance, double &tabAdvance, FontHandle *font);
 /// Loads the shape prototype of a glyph from font file
-bool loadGlyph(Shape &output, FontHandle *font, int unicode, double *advance = NULL);
+bool loadGlyph(Shape &output, FontHandle *font, int unicode, GlyphMetrics *metrics = NULL);
 /// Returns the kerning distance adjustment between two specific glyphs.
 bool getKerning(double &output, FontHandle *font, int unicode1, int unicode2);
 
