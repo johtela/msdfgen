@@ -132,8 +132,8 @@ bool loadGlyph(Shape &output, FontHandle *font, int unicode, GlyphMetrics *metri
     output.contours.clear();
     output.inverseYAxis = false;
 	if (metrics) {
-		metrics->width = font->face->glyph->metrics.width / 64. + (2. * metrics->range);
-		metrics->height = font->face->glyph->metrics.height / 64. + (2. * metrics->range);
+		metrics->width = font->face->glyph->metrics.width / 64.;
+		metrics->height = font->face->glyph->metrics.height / 64.;
 		metrics->offsetX = font->face->glyph->metrics.horiBearingX / 64.;
 		metrics->offsetY = font->face->glyph->metrics.horiBearingY / 64.;
 		metrics->advance = font->face->glyph->metrics.horiAdvance / 64.;

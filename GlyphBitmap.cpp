@@ -10,6 +10,12 @@ GlyphBitmap::GlyphBitmap(int width, int height) : Bitmap<FloatRGB>(width, height
 {
 }
 
+GlyphBitmap::~GlyphBitmap()
+{
+	if (metrics)
+		delete metrics;
+}
+
 bool GlyphBitmap::canFit(Bitmap<FloatRGB>& target)
 {
 	return x + width() <= target.width() && y + height() <= target.height();

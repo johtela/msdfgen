@@ -11,12 +11,11 @@ class FontHandle;
 
 class GlyphMetrics {
 public:
-	double range;
-	double width;
-	double height;
-	double offsetX;
-	double offsetY;
-	double advance;
+	float width;
+	float height;
+	float offsetX;
+	float offsetY;
+	float advance;
 };
 
 /// Initializes the FreeType library
