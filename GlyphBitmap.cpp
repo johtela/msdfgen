@@ -2,26 +2,31 @@
 
 namespace msdfgen {
 
-GlyphBitmap::GlyphBitmap() : Bitmap<FloatRGB>()
+template <typename T>
+GlyphBitmap<T>::GlyphBitmap() : Bitmap<T>()
 {
 }
 
-GlyphBitmap::GlyphBitmap(int width, int height) : Bitmap<FloatRGB>(width, height)
+template <typename T>
+GlyphBitmap<T>::GlyphBitmap(int width, int height) : Bitmap<T>(width, height)
 {
 }
 
-GlyphBitmap::~GlyphBitmap()
+template <typename T>
+GlyphBitmap<T>::~GlyphBitmap()
 {
 	if (metrics)
 		delete metrics;
 }
 
-bool GlyphBitmap::canFit(Bitmap<FloatRGB>& target)
+template <typename T>
+bool GlyphBitmap<T>::canFit(Bitmap<T>& target)
 {
 	return x + width() <= target.width() && y + height() <= target.height();
 }
 
-bool GlyphBitmap::bitBlit(Bitmap<FloatRGB> &target) {
+template <typename T>
+bool GlyphBitmap<T>::bitBlit(Bitmap<T> &target) {
 	if (!canFit(target))
 		return false;
 	for (int line = 0, src = 0; line < height(); line++) {
@@ -32,5 +37,7 @@ bool GlyphBitmap::bitBlit(Bitmap<FloatRGB> &target) {
 	return true;
 }
 
+template class GlyphBitmap<float>;
+template class GlyphBitmap<FloatRGB>;
 
 }

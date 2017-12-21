@@ -132,11 +132,11 @@ bool loadGlyph(Shape &output, FontHandle *font, int unicode, GlyphMetrics *metri
     output.contours.clear();
     output.inverseYAxis = false;
 	if (metrics) {
-		metrics->width = font->face->glyph->metrics.width / 64.;
-		metrics->height = font->face->glyph->metrics.height / 64.;
-		metrics->offsetX = font->face->glyph->metrics.horiBearingX / 64.;
-		metrics->offsetY = font->face->glyph->metrics.horiBearingY / 64.;
-		metrics->advance = font->face->glyph->metrics.horiAdvance / 64.;
+		metrics->width = (float)font->face->glyph->metrics.width / 64.0f;
+		metrics->height = (float)font->face->glyph->metrics.height / 64.0f;
+		metrics->offsetX = (float)font->face->glyph->metrics.horiBearingX / 64.0f;
+		metrics->offsetY = (float)font->face->glyph->metrics.horiBearingY / 64.0f;
+		metrics->advance = (float)font->face->glyph->metrics.horiAdvance / 64.0f;
 	}
 
     FtContext context = { };

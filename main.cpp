@@ -12,7 +12,11 @@
 
 using namespace msdfgen;
 
-GlyphBitmap* createGlyphBitmap(FontHandle *font, char character)
+typedef GlyphBitmap<FloatRGB> GBITMAP;
+typedef Bitmap<FloatRGB> BITMAP;
+#define GENERATE(target, shape, range, offsx, offsy) generateMSDF(target, shape, range, 1.0, Vector2(offsx, offsy));
+
+GBITMAP *createGlyphBitmap(FontHandle *font, char character)
 {
 	Shape shape;
 	GlyphMetrics *metrics = new GlyphMetrics();
@@ -26,31 +30,31 @@ GlyphBitmap* createGlyphBitmap(FontHandle *font, char character)
 	edgeColoringSimple(shape, 3.0); // max. angle
 	double l = LARGE_VALUE, b = LARGE_VALUE, r = -LARGE_VALUE, t = -LARGE_VALUE;
 	shape.bounds(l, b, r, t);
-	GlyphBitmap *result = l == LARGE_VALUE || b == LARGE_VALUE ?
-		new GlyphBitmap(0, 0) :
-		new GlyphBitmap((int)round(r - l + (2 * range)), (int)round(t - b + (2 * range)));
+	GBITMAP *result = l == LARGE_VALUE || b == LARGE_VALUE ?
+		new GBITMAP(0, 0) :
+		new GBITMAP((int)round(r - l + (2 * range)), (int)round(t - b + (2 * range)));
 	if (result->width() != 0 && result->height() != 0)
-		generateMSDF(*result, shape, range, 1.0, Vector2(-l + range, -b + range));
+		GENERATE(*result, shape, range, -l + range, -b + range);
 	result->character = character;
 	result->metrics = metrics;
 	return result;
 }
 
-bool bySize(GlyphBitmap* a, GlyphBitmap* b) {
+bool bySize(GBITMAP* a, GBITMAP* b) {
 	if (a->height() == b->height())
 		return a->width() > b->width();
 	return a->height() > b->height();
 }
 
-bool byCharacter(GlyphBitmap* a, GlyphBitmap* b) {
+bool byCharacter(GBITMAP* a, GBITMAP* b) {
 	return a->character < b->character;
 }
 
-Bitmap<FloatRGB> *packBitmaps(std::vector<GlyphBitmap*> &bitmaps, int targetWidth, FILE *csvfile) {
+BITMAP *packBitmaps(std::vector<GBITMAP*> &bitmaps, int targetWidth, FILE *txtfile) {
 	std::sort(bitmaps.begin(), bitmaps.end(), bySize);
 	int height = 0, ly = 0, lw = targetWidth;
 	for (size_t i = 0; i < bitmaps.size(); i++) {
-		GlyphBitmap* curr = bitmaps[i];
+		GBITMAP* curr = bitmaps[i];
 		if (lw + curr->width() > targetWidth)
 		{
 			ly = height;
@@ -62,20 +66,20 @@ Bitmap<FloatRGB> *packBitmaps(std::vector<GlyphBitmap*> &bitmaps, int targetWidt
 		lw += curr->width();
 	}
 	std::sort(bitmaps.begin(), bitmaps.end(), byCharacter);
-	Bitmap<FloatRGB> *result = new Bitmap<FloatRGB>(targetWidth, height);
+	BITMAP *result = new BITMAP(targetWidth, height);
 	for (size_t i = 0; i < bitmaps.size(); i++) {
-		GlyphBitmap *bm = bitmaps[i];
+		GBITMAP *bm = bitmaps[i];
 		if (!bm->bitBlit(*result))
 		{
 			delete result;
 			return NULL;
 		}
-		char csvline[200];
-		sprintf(csvline, "%c|%i|%i|%i|%i|%f|%f|%f|%f|%f\n", 
+		char txtline[200];
+		sprintf(txtline, "%c\t%i\t%i\t%i\t%i\t%f\t%f\t%f\t%f\t%f\n", 
 			bm->character, bm->x, bm->y, bm->width(), bm->height(),
 			bm->metrics->width, bm->metrics->height, 
 			bm->metrics->offsetX, bm->metrics->offsetY, bm->metrics->advance);
-		fputs(csvline, csvfile);
+		fputs(txtline, txtfile);
 	}
 	return result;
 }
@@ -89,7 +93,7 @@ int main(int argc, const char* const *argv) {
 	_splitpath(fontpath.c_str(), NULL, NULL, fontname, NULL);
 	std::string outputpath(fontname);
 	std::string pngfilepath = outputpath + ".png";
-	std::string csvfilepath = outputpath + ".csv";
+	std::string txtfilepath = outputpath + ".txt";
 
 	FreetypeHandle *ft = initializeFreetype();
 	if (ft) {
@@ -97,19 +101,19 @@ int main(int argc, const char* const *argv) {
 		if (font) {
 			FILE *cmapFile = fopen(charmap.c_str(), "r");
 			if (cmapFile) {
-				std::vector<GlyphBitmap*> bitmaps;
+				std::vector<GBITMAP*> bitmaps;
 				char character;
 				while ((character = fgetc(cmapFile)) >= 0) {
-					GlyphBitmap* bitmap = createGlyphBitmap(font, character);
+					GBITMAP* bitmap = createGlyphBitmap(font, character);
 					if (bitmap)
 						bitmaps.push_back(bitmap);
 					else
 						break;
 				}
-				FILE *csvfile = fopen(csvfilepath.c_str(), "w");
-				fputs("char|tx|ty|tw|th|gw|gh|goffsx|goffsy|gadv\n", csvfile);
-				Bitmap<FloatRGB> *fontAtlas = packBitmaps(bitmaps, 256, csvfile);
-				fclose(csvfile);
+				FILE *txtfile = fopen(txtfilepath.c_str(), "w");
+				fputs("char\ttexx\ttexy\ttexw\ttexh\tglyphwidth\tglyphheight\tglyphoffsx\tglyphoffsy\tglyphadv\n", txtfile);
+				BITMAP *fontAtlas = packBitmaps(bitmaps, 256, txtfile);
+				fclose(txtfile);
 				savePng(*fontAtlas, pngfilepath.c_str());
 				delete fontAtlas;
 				for (size_t i = 0; i < bitmaps.size(); i++)

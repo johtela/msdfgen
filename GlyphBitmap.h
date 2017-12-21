@@ -5,15 +5,16 @@
 
 namespace msdfgen {
 
-class GlyphBitmap : public Bitmap<FloatRGB>
+template<typename T>
+class GlyphBitmap : public Bitmap<T>
 {
 public:
 	GlyphBitmap();
 	GlyphBitmap(int width, int height);
 	~GlyphBitmap();
 
-	bool canFit(Bitmap<FloatRGB> &other);
-	bool bitBlit(Bitmap<FloatRGB> &other);
+	bool canFit(Bitmap<T> &target);
+	bool bitBlit(Bitmap<T> &target);
 	char character;
 	int x;
 	int y;
