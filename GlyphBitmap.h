@@ -15,7 +15,7 @@ public:
 
 	bool canFit(Bitmap<T> &target);
 	bool bitBlit(Bitmap<T> &target);
-	char character;
+	int character;
 	int x;
 	int y;
 	GlyphMetrics *metrics;

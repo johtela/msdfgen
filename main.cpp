@@ -138,7 +138,7 @@ BITMAP *packBitmaps(std::vector<GBITMAP*> &bitmaps, int targetWidth, FILE *txtfi
 			return NULL;
 		}
 		char txtline[200];
-		sprintf(txtline, "%c\t%i\t%i\t%i\t%i\t%f\t%f\t%f\t%f\t%f\n", 
+		sprintf(txtline, "%d\t%i\t%i\t%i\t%i\t%f\t%f\t%f\t%f\t%f\n", 
 			bm->character, bm->x, bm->y, bm->width(), bm->height(),
 			bm->metrics->width, bm->metrics->height, 
 			bm->metrics->offsetX, bm->metrics->offsetY, bm->metrics->advance);
