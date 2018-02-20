@@ -148,8 +148,11 @@ BITMAP *packBitmaps(std::vector<GBITMAP*> &bitmaps, int targetWidth, FILE *txtfi
 }
 
 int main(int argc, const char* const *argv) {
-	if (argc != 3)
-		printf("Usage: msdfgen <fontpath> <charmap>");
+	if (argc < 3 || argc > 4) {
+		printf("Usage: msdfgen <fontpath> <charmap/UTF-8> [width/INT]");
+		return;
+	}
+
 	std::string fontpath(argv[1]);
 	std::string charmap(argv[2]);
 	char* fontname = new char[fontpath.size()];
@@ -157,6 +160,19 @@ int main(int argc, const char* const *argv) {
 	std::string outputpath(fontname);
 	std::string pngfilepath = outputpath + ".png";
 	std::string txtfilepath = outputpath + ".txt";
+
+	// Optional atlas-width argument
+	int width = 512;
+	if (argc == 4) {
+		std::string sizestr(argv[3]);
+		int ns = std::stoi(sizestr);
+		if (ns >= 128 && ns <= 8192) {
+			width = ns;
+		} else {
+			printf("width is out of bounds: %d out 128..8192", ns);
+			return;
+		}
+	}
 
 	FreetypeHandle *ft = initializeFreetype();
 	if (ft) {
@@ -176,7 +192,7 @@ int main(int argc, const char* const *argv) {
 				}
 				FILE *txtfile = fopen(txtfilepath.c_str(), "w");
 				fputs("char\ttexx\ttexy\ttexw\ttexh\tglyphwidth\tglyphheight\tglyphoffsx\tglyphoffsy\tglyphadv\n", txtfile);
-				BITMAP *fontAtlas = packBitmaps(bitmaps, 256, txtfile);
+				BITMAP *fontAtlas = packBitmaps(bitmaps, width, txtfile);
 				fclose(txtfile);
 				savePng(*fontAtlas, pngfilepath.c_str());
 				delete fontAtlas;
