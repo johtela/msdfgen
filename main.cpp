@@ -150,7 +150,7 @@ BITMAP *packBitmaps(std::vector<GBITMAP*> &bitmaps, int targetWidth, FILE *txtfi
 int main(int argc, const char* const *argv) {
 	if (argc < 3 || argc > 4) {
 		printf("Usage: msdfgen <fontpath> <charmap/UTF-8> [width/INT]");
-		return;
+		return -1;
 	}
 
 	std::string fontpath(argv[1]);
@@ -169,8 +169,8 @@ int main(int argc, const char* const *argv) {
 		if (ns >= 128 && ns <= 8192) {
 			width = ns;
 		} else {
-			printf("width is out of bounds: %d out 128..8192", ns);
-			return;
+			printf("error: <width> is out of bounds: %d out 128..8192", ns);
+			return -1;
 		}
 	}
 
