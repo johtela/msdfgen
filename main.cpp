@@ -17,7 +17,6 @@ typedef GlyphBitmap<FloatRGB> GBITMAP;
 typedef Bitmap<FloatRGB> BITMAP;
 #define GENERATE(target, shape, range, offsx, offsy) generateMSDF(target, shape, range, 1.0, Vector2(offsx, offsy));
 
-
 // Primitive UTF-8 character decoding!
 // - Taken from: https://stackoverflow.com/a/26930620/9268653
 // - Fixed several decoding bugs while porting to C++
@@ -27,7 +26,6 @@ int fgetutf8c(FILE* f) {
 	int input[6] = {};
 
 	input[0] = fgetc(f);
-	//printf("(i[0] = %d)\n", input[0]);
 
 	if (input[0] == EOF) {
 		// The EOF was hit by the first character.
@@ -50,30 +48,18 @@ int fgetutf8c(FILE* f) {
 		int sequence_length;
 		for (sequence_length = 1; input[0] & (0x80 >> sequence_length); ++sequence_length);
 
-		// mask out sequence-length+1 from initial byte
-		int mask = -1;
-		switch (sequence_length) {
-		case 1: mask = 0b1111111; break;
-		case 2: mask = 0b11111; break;
-		case 3: mask = 0b1111; break;
-		case 4: mask = 0b111; break;
-		case 5: mask = 0b11; break;
-		case 6: mask = 0b1; break;
-		default: throw std::exception();
-		};
+		if (sequence_length > 1) {
+			// mask out the MSBs from initial byte
+			result &= 0b1111111 >> sequence_length;
 
-		//printf("%d| %d & %d = %d\n", sequence_length, result, mask, result & mask);
-		result &= mask;
+			for (int index = 1; index < sequence_length; ++index) {
+				input[index] = fgetc(f);
 
-		for (int index = 1; index < sequence_length; ++index) {
-			input[index] = fgetc(f);
-			//printf("(i[%d] = %d): %d\n", index, input[index], result);
-
-			if (input[index] == EOF) {
-				return EOF;
+				if (input[index] == EOF) {
+					return EOF;
+				}
+				result = (result << 6) | (input[index] & 0b111111);
 			}
-
-			result = (result << 6) | (input[index] & 0b111111);
 		}
 	}
 	return result;
