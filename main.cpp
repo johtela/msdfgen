@@ -1,6 +1,7 @@
 #include "msdfgen.h"
 #include "msdfgen-ext.h"
 #include "GlyphBitmap.h"
+#include <sstream>
 #include <algorithm>
 #include <string>
 #include <ft2build.h>
@@ -16,7 +17,69 @@ typedef GlyphBitmap<FloatRGB> GBITMAP;
 typedef Bitmap<FloatRGB> BITMAP;
 #define GENERATE(target, shape, range, offsx, offsy) generateMSDF(target, shape, range, 1.0, Vector2(offsx, offsy));
 
-GBITMAP *createGlyphBitmap(FontHandle *font, char character)
+
+// Primitive UTF-8 character decoding!
+// - Taken from: https://stackoverflow.com/a/26930620/9268653
+// - Fixed several decoding bugs while porting to C++
+// - Not efficient.
+int fgetutf8c(FILE* f) {
+	int result = 0;
+	int input[6] = {};
+
+	input[0] = fgetc(f);
+	//printf("(i[0] = %d)\n", input[0]);
+
+	if (input[0] == EOF) {
+		// The EOF was hit by the first character.
+		return EOF;
+	}
+	else if (input[0] < 0b10000000) {
+		// the first character is the only 7 bit sequence...
+		return input[0];
+	}
+	else if ((input[0] & 0xC0) == 0x80) {
+		// This is not the beginning of the multibyte sequence.
+		return -2;
+	}
+	else if ((input[0] & 0xfe) == 0xfe) {
+		// This is not a valid UTF-8 stream.
+		return -2;
+	}
+	else {
+		result = input[0];
+		int sequence_length;
+		for (sequence_length = 1; input[0] & (0x80 >> sequence_length); ++sequence_length);
+
+		// mask out sequence-length+1 from initial byte
+		int mask = -1;
+		switch (sequence_length) {
+		case 1: mask = 0b1111111; break;
+		case 2: mask = 0b11111; break;
+		case 3: mask = 0b1111; break;
+		case 4: mask = 0b111; break;
+		case 5: mask = 0b11; break;
+		case 6: mask = 0b1; break;
+		default: throw std::exception();
+		};
+
+		//printf("%d| %d & %d = %d\n", sequence_length, result, mask, result & mask);
+		result &= mask;
+
+		for (int index = 1; index < sequence_length; ++index) {
+			input[index] = fgetc(f);
+			//printf("(i[%d] = %d): %d\n", index, input[index], result);
+
+			if (input[index] == EOF) {
+				return EOF;
+			}
+
+			result = (result << 6) | (input[index] & 0b111111);
+		}
+	}
+	return result;
+}
+
+GBITMAP *createGlyphBitmap(FontHandle *font, int character)
 {
 	Shape shape;
 	GlyphMetrics *metrics = new GlyphMetrics();
@@ -75,7 +138,7 @@ BITMAP *packBitmaps(std::vector<GBITMAP*> &bitmaps, int targetWidth, FILE *txtfi
 			return NULL;
 		}
 		char txtline[200];
-		sprintf(txtline, "%c\t%i\t%i\t%i\t%i\t%f\t%f\t%f\t%f\t%f\n", 
+		sprintf(txtline, "%d\t%i\t%i\t%i\t%i\t%f\t%f\t%f\t%f\t%f\n", 
 			bm->character, bm->x, bm->y, bm->width(), bm->height(),
 			bm->metrics->width, bm->metrics->height, 
 			bm->metrics->offsetX, bm->metrics->offsetY, bm->metrics->advance);
@@ -85,8 +148,11 @@ BITMAP *packBitmaps(std::vector<GBITMAP*> &bitmaps, int targetWidth, FILE *txtfi
 }
 
 int main(int argc, const char* const *argv) {
-	if (argc != 3)
-		printf("Usage: msdfgen <fontpath> <charmap>");
+	if (argc < 3 || argc > 4) {
+		printf("Usage: msdfgen <fontpath> <charmap/UTF-8> [width/INT]");
+		return -1;
+	}
+
 	std::string fontpath(argv[1]);
 	std::string charmap(argv[2]);
 	char* fontname = new char[fontpath.size()];
@@ -95,6 +161,19 @@ int main(int argc, const char* const *argv) {
 	std::string pngfilepath = outputpath + ".png";
 	std::string txtfilepath = outputpath + ".txt";
 
+	// Optional atlas-width argument
+	int width = 512;
+	if (argc == 4) {
+		std::string sizestr(argv[3]);
+		int ns = std::stoi(sizestr);
+		if (ns >= 128 && ns <= 8192) {
+			width = ns;
+		} else {
+			printf("error: <width> is out of bounds: %d out 128..8192", ns);
+			return -1;
+		}
+	}
+
 	FreetypeHandle *ft = initializeFreetype();
 	if (ft) {
 		FontHandle *font = loadFont(ft, fontpath.c_str());
@@ -102,8 +181,9 @@ int main(int argc, const char* const *argv) {
 			FILE *cmapFile = fopen(charmap.c_str(), "r");
 			if (cmapFile) {
 				std::vector<GBITMAP*> bitmaps;
-				char character;
-				while ((character = fgetc(cmapFile)) >= 0) {
+				int character = 0;
+				while ((character = fgetutf8c(cmapFile)) >= 0) {
+					printf("processing codepoint: %d\n", character);
 					GBITMAP* bitmap = createGlyphBitmap(font, character);
 					if (bitmap)
 						bitmaps.push_back(bitmap);
@@ -112,7 +192,7 @@ int main(int argc, const char* const *argv) {
 				}
 				FILE *txtfile = fopen(txtfilepath.c_str(), "w");
 				fputs("char\ttexx\ttexy\ttexw\ttexh\tglyphwidth\tglyphheight\tglyphoffsx\tglyphoffsy\tglyphadv\n", txtfile);
-				BITMAP *fontAtlas = packBitmaps(bitmaps, 256, txtfile);
+				BITMAP *fontAtlas = packBitmaps(bitmaps, width, txtfile);
 				fclose(txtfile);
 				savePng(*fontAtlas, pngfilepath.c_str());
 				delete fontAtlas;
