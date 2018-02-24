@@ -22,47 +22,32 @@ typedef Bitmap<FloatRGB> BITMAP;
 // - Fixed several decoding bugs while porting to C++
 // - Not efficient.
 int fgetutf8c(FILE* f) {
-	int result = 0;
-	int input[6] = {};
+	int result = fgetc(f);
 
-	input[0] = fgetc(f);
-
-	if (input[0] == EOF) {
-		// The EOF was hit by the first character.
-		return EOF;
+	if (result == EOF || (result & 0b10000000) == 0) {
+		return result;
 	}
-	else if (input[0] < 0b10000000) {
-		// the first character is the only 7 bit sequence...
-		return input[0];
-	}
-	else if ((input[0] & 0xC0) == 0x80) {
-		// This is not the beginning of the multibyte sequence.
-		return -2;
-	}
-	else if ((input[0] & 0xfe) == 0xfe) {
+	else if ((result & 0xC0) == 0x80 || (result & 0xfe) == 0xfe) {
 		// This is not a valid UTF-8 stream.
 		return -2;
 	}
 	else {
-		result = input[0];
 		int sequence_length;
-		for (sequence_length = 1; input[0] & (0x80 >> sequence_length); ++sequence_length);
+		for (sequence_length = 1; result & (0x80 >> sequence_length); ++sequence_length);
 
-		if (sequence_length > 1) {
-			// mask out the MSBs from initial byte
-			result &= 0b1111111 >> sequence_length;
+		// mask out the MSBs from initial byte
+		result &= 0b1111111 >> sequence_length;
 
-			for (int index = 1; index < sequence_length; ++index) {
-				input[index] = fgetc(f);
+		for (int i = 1; i < sequence_length; ++i) {
+			int byte = fgetc(f);
 
-				if (input[index] == EOF) {
-					return EOF;
-				}
-				result = (result << 6) | (input[index] & 0b111111);
+			if (byte == EOF) {
+				return EOF;
 			}
+			result = (result << 6) | (byte & 0b111111);
 		}
+		return result;
 	}
-	return result;
 }
 
 GBITMAP *createGlyphBitmap(FontHandle *font, int character)
